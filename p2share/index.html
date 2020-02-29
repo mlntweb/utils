@@ -1,0 +1,58 @@
+<html>
+<head>
+	<script src="https://unpkg.com/peerjs@1.0.0/dist/peerjs.min.js"></script>
+	<script>
+		var share;
+		window.onload = ()=>{
+			var peer = new Peer();
+			var imageLoader = document.getElementById('imageLoader');
+			imageLoader.addEventListener('change', handleImage, false);
+			var canvas = document.getElementById('imageCanvas');
+			var ctx = canvas.getContext('2d');
+
+
+			function handleImage(e){
+					var reader = new FileReader();
+					reader.onload = function(event){
+							var img = new Image();
+							img.onload = function(){
+									canvas.width = img.width;
+									canvas.height = img.height;
+									ctx.drawImage(img,0,0);
+							}
+							img.src = event.target.result;
+					}
+					reader.readAsDataURL(e.target.files[0]);		 
+			}
+			peer.on("open", (id) => {
+				document.getElementById("myid").innerHTML = id;
+			})
+			peer.on("connection", (connc) => {
+				connc.on("data", (data) => {
+					document.getElementById("image").src = data;
+				})
+			})
+			share = function() {
+					let base64 = document.getElementById('imageCanvas').toDataURL('image/jpeg');
+					var peerid = document.getElementById('peerid').value;
+					let connection = peer.connect(peerid)
+					connection.on("open", () => {
+						connection.send(base64)
+					})
+
+				}
+		}
+	</script>
+</head>
+<body>
+	<h1>p2share</h1>
+	<h2 id="myid">---</h2>
+	<label>Share with:</label>
+	<input type="text" id="peerid"></input>
+	<button onclick="share()" value="Share">Share</button>
+	<label>Image File:</label>
+	<input type="file" id="imageLoader"></input>
+	<img src="" id="image"></img>
+	<canvas id="imageCanvas"></canvas>
+</body>
+</html>
